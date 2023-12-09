@@ -1,20 +1,39 @@
-# PART ONE
-# Iterate over the file and transform each line into a string in an array with newline characters removed
+# Variables
 lines = File.readlines('Day1/input.txt').map(&:chomp)
+NAMED_NUMBERS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"].freeze
+pattern = /(#{NAMED_NUMBERS.join('|')})/
 
-# Transform each string in the array and extract digits
-digit_pairs = lines.map do |str|
-  digits = str.scan(/\d/)  # Extract all digits from the string
+def word_to_number(word)
+  NAMED_NUMBERS.index(word).to_s
+end
 
-  if digits.empty?
-    nil  # or handle non-digit strings as needed
-  elsif digits.length == 1
-    digits.first * 2  # Double the digit if it's the only one
-  else
-    digits.first + digits.last  # Concatenate the first and last digit
+def digitise_input(lines, pattern)
+  lines.map do |str| 
+    str.gsub(pattern) do |word| 
+        word_to_number(word) 
+      end
+   end
+end 
+
+def collect_first_and_last_num(lines, pattern)
+  digitised_lines = digitise_input(lines, pattern)
+  digitised_lines.map do |numbers|
+    digits = numbers.scan(/\d/) 
+    if digits.empty?
+      nil 
+    elsif digits.length == 1
+      digits.first * 2
+    else
+      digits.first + digits.last 
+    end
   end
 end
 
-sum = digit_pairs.map(&:to_i).sum  # Convert each string to an integer and sum them
+def sum_digits(lines, pattern)
+  digit_pairs = collect_first_and_last_num(lines, pattern)
+  digit_pairs.map(&:to_i).sum
+end
 
-p sum # => 55123 The sum of all the calibrations
+total = sum_digits(lines, pattern)
+p total
+# p sum # => 55123 The sum of all the calibrations
