@@ -32,4 +32,30 @@ describe 'valid_game_count' do
       expect(find_total_valid_games(lines)).to eq(9)
     end
   end
+
+  describe 'highest_color_value_per_game' do
+    it 'returns the highest color value for each game' do
+      lines = [
+        'Game 1: 12 red, 3 green, 4 blue; 1 red, 2 green, 3 blue',
+        'Game 3: 5 red, 6 green, 7 blue; 2 red, 3 green, 4 blue',
+        'Game 5: 1 red, 1 green, 1 blue; 2 red, 2 green, 2 blue'
+      ]
+      expect(highest_color_value_per_game(lines)).to eq({
+        'Game 1' => {'red' => 12, 'green' => 3, 'blue' => 4},
+        'Game 3' => {'red' => 5, 'green' => 6, 'blue' => 7},
+        'Game 5' => {'red' => 2, 'green' => 2, 'blue' => 2}
+      })
+    end
+  end
+
+  describe 'find_power_of_color' do
+    it 'returns the total power of all colors' do
+      lines = [
+        'Game 1: 12 red, 3 green, 4 blue; 1 red, 2 green, 3 blue',
+        'Game 3: 5 red, 6 green, 7 blue; 2 red, 3 green, 4 blue',
+        'Game 5: 1 red, 1 green, 1 blue; 2 red, 2 green, 2 blue'
+      ]
+      expect(find_power_of_color(lines)).to eq((12 * 3 * 4) + (5 * 6 * 7) + (2 * 2 * 2))
+    end
+  end
 end
