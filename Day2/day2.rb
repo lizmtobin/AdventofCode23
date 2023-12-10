@@ -1,31 +1,29 @@
-# Task
-# Each game has a few sets within 
-# Add all the colours for each game to get total 
-# Check against possible amount 
+def is_set_valid?(set)
+  color_counts = Hash.new(0)
+  set.split(', ').each do |color_count|
+    count, color        = color_count.split
+    color_counts[color] = count.to_i
+  end
+  color_counts['red'] <= 12 && color_counts['green'] <= 13 && color_counts['blue'] <= 14
+end
 
 def process_game_line(line)
   game, sets = line.split(': ')
-  color_totals = Hash.new(0)
-  
-  sets.split('; ').each do |game_set|
-    game_set.split(', ').each do |color_count|
-      count, color = color_count.split
-      color_totals[color] += count.to_i
-    end
+  if sets.split('; ').all? { |set| is_set_valid?(set) }
+    game.split.last.to_i
+  else
+    0
   end
-  
-  { game => color_totals }
 end
 
-def build_totals_hash(lines)
-  totals = {}
+def find_total_valid_games(lines)
+  valid_games_count = 0
   lines.each do |line|
-    game_totals = process_game_line(line)
-    totals.merge!(game_totals)
+    valid_games_count += process_game_line(line)
   end
-  totals
+  valid_games_count
 end
 
 lines = File.readlines("Day2/input.txt", chomp: true)
-
-# p build_totals_hash(lines)
+total_valid_games = find_total_valid_games(lines)
+puts "Total valid games: #{total_valid_games}"
