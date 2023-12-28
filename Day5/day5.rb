@@ -1,66 +1,169 @@
-input = <<~INPUT
-seeds: 79 14 55 13
+require 'set'
 
-seed-to-soil map:
-50 98 2
-52 50 48
+# input = <<~INPUT
+# seeds: 79 14 55 13
 
-soil-to-fertilizer map:
-0 15 37
-37 52 2
-39 0 15
+# seed-to-soil map:
+# 50 98 2
+# 52 50 48
 
-fertilizer-to-water map:
-49 53 8
-0 11 42
-42 0 7
-57 7 4
+# soil-to-fertilizer map:
+# 0 15 37
+# 37 52 2
+# 39 0 15
 
-water-to-light map:
-88 18 7
-18 25 70
+# fertilizer-to-water map:
+# 49 53 8
+# 0 11 42
+# 42 0 7
+# 57 7 4
 
-light-to-temperature map:
-45 77 23
-81 45 19
-68 64 13
+# water-to-light map:
+# 88 18 7
+# 18 25 70
 
-temperature-to-humidity map:
-0 69 1
-1 0 69
+# light-to-temperature map:
+# 45 77 23
+# 81 45 19
+# 68 64 13
 
-humidity-to-location map:
-60 56 37
-56 93 4
-INPUT
+# temperature-to-humidity map:
+# 0 69 1
+# 1 0 69
 
-seds, *groups = input.split("\n\n")
-_, *seeds = seds.split.map(&:to_i)
-p seeds
+# humidity-to-location map:
+# 60 56 37
+# 56 93 4
+# INPUT
 
-groups = groups.map do |group|
-  label, *mapping = group.split("\n")
-  mapping
-  .map { |row| row.split.map(&:to_i) }
-  .map { |dest, src, len| [(src...src + len), dest - src] }
+# seds, *groups = input.split("\n\n")
+# _, *seeds = seds.split.map(&:to_i)
+# p seeds
+
+# groups = groups.map do |group|
+#   label, *mapping = group.split("\n")
+#   mapping
+#   .map { |row| row.split.map(&:to_i) }
+#   .map { |dest, src, len| [(src...src + len), dest - src] }
+# end
+
+# def find(group, seed)
+#   group.each do |range, offset|
+#     if range.include?(seed)
+#       return seed + offset
+#     end
+#   end
+# end
+
+# seeds.map do |seed|
+#   groups.each do |group|
+#     seed = find(group, seed)
+#   end
+#   seed
+# end.min => min_seed
+
+# puts min_seed
+input = DATA.read
+s, *maps = input.split(/\n\n/)
+_, *seeds = s.split.map(&:to_i)
+
+maps = maps.map do|m|
+  label, *rows = m.split(/\n/)
+  rows.map {_1.split.map(&:to_i)}
 end
 
-def find(group, seed)
-  group.each do |range, offset|
-    if range.include?(seed)
-      return seed + offset
+def find(page, target)
+  page.each do |ds, ss, len|
+    if target >= ss && target < ss + len
+      return ds + (target - ss)
+    end
+  end
+  target
+end
+
+seeds.map do |seed|
+  s = seed
+  maps.each do |m|
+    s = find(m, s)
+  end
+
+  s
+end => r
+
+p r.min
+
+class Range
+  def overlaps?(other)
+    cover?(other.first) || other.cover?(first)
+  end
+
+  def intersection(other)
+    return nil if (self.max < other.begin or other.max < self.begin)
+    [self.begin, other.begin].max..[self.max, other.max].min
+  end
+
+  alias_method :&, :intersection
+end
+
+s, *maps = input.split(/\n\n/)
+_, *seeds = s.split.map(&:to_i)
+
+maps = maps.map do|m|
+  label, *rows = m.split(/\n/)
+  rows.map {_1.split.map(&:to_i)}
+end
+
+maps = maps.map do |m|
+  m2 = m.map do |dest, src, len|
+    [
+      src,
+      src + len - 1,
+      dest - src
+    ]
+  end.sort
+
+  if m2[0][0] != 0
+    m2.unshift([0, m2[0][0] - 1, 0])
+  else
+    m2
+  end
+end
+
+maps = maps.map do |m|
+  src_end = m[-1][1]
+  end_cap = [
+    src_end + 1,
+    src_end + 1_000_000_000_000,
+    0
+  ]
+  m + [end_cap]
+end
+
+def convert(page, seed_range)
+  page.filter_map do |src_start, src_end, diff|
+    if seed_range.overlaps?(src_start...src_end)
+      intersection = seed_range & (src_start...src_end)
+      rng_start = intersection.begin + diff
+      rng_end = intersection.end + diff
+      (rng_start..rng_end)
     end
   end
 end
 
-seeds.map do |seed|
-  groups.each do |group|
-    seed = find(group, seed)
-  end
-  seed
-end.min => min_seed
+current_ranges = Array.new(8) { Set.new }
+seeds.each_slice(2).map do |seed_start, len|
+  seed_range = (seed_start...seed_start + len)
+  current_ranges[0] << seed_range
 
-puts min_seed
+  maps.each_with_index do |m, i|
+    current_ranges[i].each do |current_range|
+      current_ranges[i + 1] += convert(m, current_range)
+    end
+  end
+end
+
+p current_ranges.last.map(&:min).min
+
 
 __END__
 seeds: 3429320627 235304036 1147330745 114559245 1684000747 468955901 677937579 96599505 1436970021 26560102 3886049334 159534901 936845926 25265009 3247146679 95841652 3696363517 45808572 2319065313 125950148
