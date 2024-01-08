@@ -44,5 +44,21 @@ result_product = time_intervals.zip(distances).map do |time_interval, record_dis
   end
 end.reduce(:*)
 
+# Take 3
+time = %w(7  15   30).map(&:to_i)
+distance = %w(9  40  200).map(&:to_i)
+
+races = time.zip(distance)
+races.reduce(1) do |acc, (time, record_distance)|
+  ways = 0
+  time.times do |seconds_held|
+    if seconds_held * (time - seconds_held) > record_distance
+      ways += 1
+    end
+  end
+  acc * ways
+end => result
+p result
+
 p result_product
 # p new_rec_array.reduce(:*)
